@@ -70,30 +70,22 @@ class LinkedList:
             fast = fast.next.next
         return slow
 
-    def sorted_merge(self, left, right, desc=False):
+    def sorted_merge(self, left, right):
         if left is None:
             return right
         if right is None:
             return left
 
-        if desc:
-            if left.data >= right.data:
-                result = left
-                result.next = self.sorted_merge(left.next, right, desc)
-            else:
-                result = right
-                result.next = self.sorted_merge(left, right.next, desc)
+        if left.data <= right.data:
+            result = left
+            result.next = self.sorted_merge(left.next, right)
         else:
-            if left.data <= right.data:
-                result = left
-                result.next = self.sorted_merge(left.next, right, desc)
-            else:
-                result = right
-                result.next = self.sorted_merge(left, right.next, desc)
+            result = right
+            result.next = self.sorted_merge(left, right.next)
 
         return result
 
-    def merge_sort(self, head=None, desc=False):
+    def merge_sort(self, head=None):
         if head is None:
             head = self.head
 
@@ -104,47 +96,26 @@ class LinkedList:
         next_to_middle = middle.next
         middle.next = None
 
-        left = self.merge_sort(head, desc)
-        right = self.merge_sort(next_to_middle, desc)
+        left = self.merge_sort(head)
+        right = self.merge_sort(next_to_middle)
 
-        sorted_list = self.sorted_merge(left, right, desc)
+        sorted_list = self.sorted_merge(left, right)
+
         return sorted_list
 
     def sort(self, desc=False):
-        self.head = self.merge_sort(self.head, desc)
+        if desc:
+            self.head = self.merge_sort(self.head)
+            self.reverse()
+        else:
+            self.head = self.merge_sort(self.head)
 
-    def merge_sorted_lists(self, other, desc=False):
-        self.sort(desc)
-        other.sort(desc)
+    def merge_sorted_lists(self, other):
 
-        new_list = LinkedList()
-        dummy = Node()
-        tail = dummy
+        result = LinkedList()
+        result.head = self.sorted_merge(self.head, other.head)
 
-        head1 = self.head
-        head2 = other.head
-
-        while head1 and head2:
-            if (desc and head1.data >= head2.data) or (not desc and head1.data <= head2.data):
-                tail.next = Node(head1.data)
-                head1 = head1.next
-            else:
-                tail.next = Node(head2.data)
-                head2 = head2.next
-            tail = tail.next
-
-        while head1:
-            tail.next = Node(head1.data)
-            head1 = head1.next
-            tail = tail.next
-
-        while head2:
-            tail.next = Node(head2.data)
-            head2 = head2.next
-            tail = tail.next
-
-        new_list.head = dummy.next
-        return new_list
+        return result
 
 
 if __name__ == '__main__':
@@ -166,7 +137,7 @@ if __name__ == '__main__':
     print("Оригінальний список:")
     llist.print_list()
 
-    print("Оригінальний список 2:")
+    print("\nОригінальний список 2:")
     llist.print_list()
 
     llist.reverse()
@@ -186,9 +157,5 @@ if __name__ == '__main__':
     llist_other.print_list()
 
     merge = llist.merge_sorted_lists(llist_other)
-    print("\nОб'єднаний список за зростанням:")
-    merge.print_list()
-
-    merge = llist.merge_sorted_lists(llist_other, desc=True)
-    print("\nОб'єднаний список за спаданням:")
+    print("\nОб'єднаний відсортований список:")
     merge.print_list()
