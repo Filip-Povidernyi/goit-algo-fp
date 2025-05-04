@@ -2,6 +2,7 @@ import uuid
 import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
+from collections import deque
 
 
 class Node:
@@ -32,7 +33,7 @@ def add_edges(graph, node, pos, x=0, y=0, layer=1):
     return graph
 
 
-def draw_tree(tree_root):
+def draw_tree(tree_root, title="Binary Tree Visualization"):
     tree = nx.DiGraph()
     pos = {tree_root.id: (0, 0)}
     tree = add_edges(tree, tree_root, pos)
@@ -41,10 +42,10 @@ def draw_tree(tree_root):
     labels = {
         node[0]: node[1]["label"] for node in tree.nodes(data=True)
     }
-
     plt.figure(figsize=(8, 5))
+    plt.title(title)
     nx.draw(
-        tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors
+        tree, pos=pos, labels=labels, arrows=False, node_size=2000, node_color=colors
     )
     plt.show()
 
@@ -75,9 +76,63 @@ def build_tree_from_heap(heap):
     return root
 
 
-if __name__ == "__main__":
+def generate_gradient_colors(n, start="#800000", end="#ffa500"):
+    def hex_to_rgb(hex):
+        return tuple(int(hex[i:i+2], 16) for i in (1, 3, 5))
+
+    def rgb_to_hex(rgb):
+        return "#" + "".join(f"{v:02X}" for v in rgb)
+
+    start_rgb = hex_to_rgb(start)
+    end_rgb = hex_to_rgb(end)
+    gradient = []
+    for i in range(n):
+        mix = tuple(
+            int(start_rgb[j] + (float(i) / (n - 1))
+                * (end_rgb[j] - start_rgb[j]))
+            for j in range(3)
+        )
+        gradient.append(rgb_to_hex(mix))
+    return gradient
+
+
+def bfs_coloring(root):
+    queue = deque([root])
+    visited = []
+
+    while queue:
+        node = queue.popleft()
+        if node:
+            visited.append(node)
+            queue.append(node.left)
+            queue.append(node.right)
+    colors = generate_gradient_colors(len(visited))
+    for i, node in enumerate(visited):
+        node.color = colors[i]
+
+
+def dfs_coloring(root):
+    stack = [root]
+    visited = []
+
+    while stack:
+        node = stack.pop()
+        if node:
+            visited.append(node)
+            stack.append(node.right)
+            stack.append(node.left)
+    colors = generate_gradient_colors(len(visited))
+    for i, node in enumerate(visited):
+        node.color = colors[i]
+
+
+if __name__ == '__main__':
 
     lst = [x for x in range(1, 15)]
     heapq.heapify(lst)
-    tree = build_tree_from_heap(lst)
-    draw_tree(tree)
+    tree_bfs = build_tree_from_heap(lst.copy())
+    bfs_coloring(tree_bfs)
+    draw_tree(tree_bfs, title="BFS Traversal Visualization")
+    tree_dfs = build_tree_from_heap(lst.copy())
+    dfs_coloring(tree_dfs)
+    draw_tree(tree_dfs, title="DFS Traversal Visualization")
